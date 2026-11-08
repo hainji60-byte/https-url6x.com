@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | URL6X</title>
+            <link href="assets/dashboard.736bccfba8acfeee.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .animated-header { background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%); position:relative; overflow:hidden; }
+        .fade-in { animation:fadeIn .5s ease-out; }
+        .login-card { background:#fff; }
+        .card-hover { transition:transform .3s ease,box-shadow .3s ease; }
+        .card-hover:hover { transform:translateY(-5px); box-shadow:0 20px 40px rgba(0,0,0,.1); }
+        .toast { position:fixed; bottom:20px; right:20px; z-index:1000; animation:slideIn .3s ease-out; }
+        .tab-active { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff; box-shadow:0 4px 14px rgba(102,126,234,.4); }
+        .tab-inactive { background:transparent; color:#4b5563; cursor:pointer; }
+        .tab-inactive:hover { background:#fff; color:#1f2937; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+        .destination-preview { font-family:'Courier New',monospace; font-size:12px; background:#f8f9fa; padding:4px 8px; border-radius:6px; display:inline-block; }
+        .loading-spinner { display:inline-block; width:20px; height:20px; border:3px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:#fff; animation:spin 1s linear infinite; }
+
+        /* Authenticated dashboard — intentionally flat, dense and task-first. */
+        .dashboard-body { background:#f8fafc; color:#111827; }
+        .dashboard-shell { width:min(100%,1600px); margin:0 auto; padding:0 20px 28px; }
+        .dashboard-topbar { min-height:64px; display:flex; align-items:center; gap:20px; background:#fff; border-bottom:1px solid #e5e7eb; margin:0 -20px 16px; padding:8px 20px; position:relative; z-index:40; }
+        .dashboard-brand { min-height:44px; display:flex; align-items:center; gap:12px; min-width:max-content; border-radius:8px; text-decoration:none; }
+        .dashboard-brand:focus-visible { outline:3px solid #4338ca; outline-offset:3px; }
+        .brand-icons { display:flex; align-items:center; gap:9px; font-size:24px; line-height:1; }
+        .brand-icons .fa-link,.brand-icons .fa-rocket { color:#3730d9; }
+        .brand-icons .fa-bolt { color:#f7c514; }
+        .dashboard-brand-name { font-size:20px; font-weight:700; letter-spacing:-.02em; color:#111827; }
+        .dashboard-metrics { margin-left:auto; display:flex; align-items:center; gap:12px; }
+        .metric { display:flex; align-items:center; gap:9px; padding:3px 12px; border-left:1px solid #e5e7eb; min-height:42px; }
+        .metric:first-child { border-left:0; }
+        .metric-icon { width:32px; height:32px; border-radius:8px; display:grid; place-items:center; color:#342ed7; background:#f5f4ff; flex:0 0 auto; }
+        .metric-label { color:#64748b; font-size:11px; line-height:1.1; }
+        .metric-value { color:#111827; font-size:16px; line-height:1.15; font-weight:700; font-variant-numeric:tabular-nums; }
+        .today-pill { display:inline-flex; align-items:center; gap:4px; margin-left:7px; padding:3px 7px; border-radius:999px; background:#eef2ff; color:#3730d9; font-size:10px; font-weight:700; white-space:nowrap; }
+        .community-metric { gap:10px; }
+        .community-icon { font-size:14px; }
+        .community-trend { margin-left:3px; color:#3730d9; font-size:8px; }
+        .community-copy { display:flex; min-width:0; flex-direction:column; align-items:flex-start; }
+        .community-copy .today-pill { margin:3px 0 0; }
+        .community-scope { display:inline-flex; align-items:center; margin-top:2px; padding:2px 6px; border-radius:999px; background:#eef2ff; color:#3730d9; font-size:8px; line-height:1.2; font-weight:700; white-space:nowrap; }
+        .account-wrap { position:relative; margin-left:6px; }
+        .account-button { width:52px; height:42px; border:1px solid #dbe2ea; border-radius:9px; display:flex; align-items:center; justify-content:center; gap:8px; color:#342ed7; background:#fff; }
+        .account-button:hover { background:#f8fafc; }
+        .account-menu { position:absolute; right:0; top:calc(100% + 8px); width:176px; padding:6px; background:#fff; border:1px solid #dbe2ea; border-radius:10px; box-shadow:0 14px 35px rgba(15,23,42,.14); }
+        .account-menu a,.account-menu button { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:7px; color:#334155; font-size:13px; font-weight:600; }
+        .account-menu a:hover,.account-menu button:hover { background:#f1f5f9; }
+        .account-menu button { width:100%; border:0; background:transparent; text-align:left; cursor:pointer; }
+        .account-menu .logout-link { color:#dc2626; }
+
+        /* Protection updates: compact, responsive notification treatment. */
+        @keyframes shieldRing {
+            0%,52%,100% { transform:rotate(0); }
+            60% { transform:rotate(13deg); }
+            68% { transform:rotate(-11deg); }
+            76% { transform:rotate(8deg); }
+            84% { transform:rotate(-5deg); }
+            92% { transform:rotate(2deg); }
+        }
+        @keyframes shieldDotPulse {
+            0%,100% { transform:scale(1); opacity:1; }
+            50% { transform:scale(1.28); opacity:.72; }
+        }
+        .shield-wrap { position:relative; flex:0 0 auto; }
+        .shield-button { position:relative; width:52px; height:42px; border:1px solid #dbe2ea; border-radius:9px;
+            display:grid; place-items:center; color:#342ed7; background:#fff; transition:background .15s,border-color .15s,box-shadow .15s; }
+        .shield-button:hover,.shield-button[aria-expanded="true"] { background:#f7f7ff; border-color:#c9c7f7; box-shadow:0 4px 12px rgba(52,46,215,.12); }
+        .shield-icon { font-size:19px; transform-origin:50% 18%; animation:shieldRing 1.8s ease-in-out 2; }
+        .shield-dot { position:absolute; right:7px; top:6px; width:8px; height:8px; border:2px solid #fff; border-radius:999px;
+            background:#ef4444; animation:shieldDotPulse 1.6s ease-in-out infinite; }
+        .shield-button.is-seen .shield-icon { animation:none; }
+        .shield-button.is-seen .shield-dot { display:none; }
+        .shield-panel { position:absolute; right:0; top:calc(100% + 9px); width:320px; max-width:calc(100vw - 24px);
+            overflow:hidden; border:1px solid #dbe2ea; border-radius:12px; background:#fff; box-shadow:0 18px 45px rgba(15,23,42,.18);
+            color:#111827; text-align:left; z-index:70; }
+        .shield-panel-head { padding:15px 16px 13px; border-bottom:1px solid #edf0f4; }
+        .shield-panel-title { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+        .shield-panel-title-icon { width:30px; height:30px; display:grid; place-items:center; border-radius:8px; color:#342ed7; background:#f3f2ff; }
+        .shield-panel-title strong { display:block; font-size:14px; line-height:1.2; }
+        .shield-panel-title small { display:block; margin-top:2px; color:#64748b; font-size:10px; font-weight:600; }
+        .shield-summary { color:#1f2937; font-size:13px; line-height:1.45; }
+        .shield-summary strong { font-weight:750; }
+        .shield-summary-note { margin-top:7px; color:#64748b; font-size:11px; line-height:1.45; }
+        .shield-days { max-height:246px; overflow:auto; overscroll-behavior:contain; }
+        .shield-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px; padding:8px 16px;
+            border-top:1px solid #f0f2f5; color:#64748b; font-size:11.5px; }
+        .shield-row:first-child { border-top:0; }
+        .shield-row-count { color:#334155; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .shield-row-count.is-zero { color:#94a3b8; }
+        .shield-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px;
+            border-top:1px solid #e5e7eb; background:#f8fafc; color:#64748b; font-size:11px; }
+        .shield-footer strong { color:#342ed7; font-size:12px; font-variant-numeric:tabular-nums; }
+        @media (prefers-reduced-motion:reduce) {
+            .fade-in,.toast,.loading-spinner,.shield-icon,.shield-dot { animation:none; }
+        }
+
+        .dashboard-grid { display:grid; grid-template-columns:minmax(0,62fr) minmax(350px,38fr); gap:16px; align-items:start; }
+        .workspace-panel,.links-panel { background:#fff; border:1px solid #dfe5ec; border-radius:10px; box-shadow:0 1px 2px rgba(15,23,42,.03); min-width:0; }
+        .workspace-panel { padding:14px 16px 16px; }
+        .links-panel { padding:16px; }
+        .dashboard-tabs { display:grid; grid-template-columns:1fr 1fr; border:1px solid #dfe5ec; border-radius:7px; overflow:hidden; margin-bottom:16px; }
+        .dashboard-tab { min-height:38px; padding:8px 14px; background:#f8fafc; color:#27324a; font-size:14px; font-weight:600; transition:background .15s,color .15s; }
+        .dashboard-tab + .dashboard-tab { border-left:1px solid #dfe5ec; }
+        .dashboard-tab.tab-active { color:#fff; background:#3832db; box-shadow:none; }
+        .dashboard-tab.tab-inactive { color:#27324a; background:#f8fafc; }
+        .dashboard-tab.tab-inactive:hover { background:#f1f5f9; box-shadow:none; }
+        .creator-form { display:grid; gap:14px; }
+        .field-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .field label,.field-label { display:block; margin-bottom:6px; color:#1f2937; font-size:13px; font-weight:700; }
+        .field-label .muted { color:#64748b; font-weight:500; }
+        .dashboard-input { width:100%; border:1px solid #cfd8e3; border-radius:7px; background:#fff; color:#1e293b; padding:10px 12px; font-size:14px; line-height:1.45; transition:border-color .15s,box-shadow .15s; }
+        .dashboard-input:focus { outline:0; border-color:#5148e5; box-shadow:0 0 0 2px rgba(81,72,229,.12); }
+        .short-composer { display:grid; grid-template-columns:minmax(166px,200px) minmax(0,1fr); align-items:start; }
+        .short-composer .dashboard-input { height:44px; min-height:44px; border-radius:0 7px 7px 0; border-left:0; }
+        .domain-picker-wrap { min-width:0; }
+        .domain-picker { position:relative; min-width:0; }
+        .domain-trigger { width:100%; min-height:44px; display:grid; grid-template-columns:16px minmax(0,1fr) auto 18px; align-items:center; gap:7px;
+            padding:8px 10px; border:1px solid #cfd8e3; border-radius:7px 0 0 7px; background:#fff; color:#1e293b; font-size:12px; text-align:left; }
+        .domain-trigger:hover { background:#fafaff; }
+        .domain-trigger:focus-visible,.domain-option:focus-visible,.domain-make-default:focus-visible,.domain-manage:focus-visible {
+            outline:2px solid #5148e5; outline-offset:2px; }
+        .domain-trigger-host { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:650; }
+        .domain-chevron { width:18px; height:18px; display:grid; place-items:center; justify-self:end; border-radius:6px;
+            background:linear-gradient(135deg,#5b5cf6 0%,#8b5cf6 100%); box-shadow:0 2px 6px rgba(79,70,229,.20);
+            color:#fff; font-size:8px; line-height:1; transition:transform .15s ease,box-shadow .15s ease; }
+        .domain-trigger[aria-expanded="true"] .domain-chevron { transform:rotate(180deg); box-shadow:0 -2px 6px rgba(79,70,229,.20); }
+        .domain-default-badge { display:inline-flex; align-items:center; min-height:20px; padding:2px 7px; border-radius:999px;
+            background:#eeedff; color:#3730a3; font-size:10px; line-height:1; font-weight:750; white-space:nowrap; }
+        .domain-default-badge[hidden],.domain-make-default[hidden],.domain-selected-check[hidden] { display:none; }
+        .domain-menu { position:absolute; z-index:40; left:0; top:calc(100% + 6px); width:max(100%,290px); max-width:min(360px,calc(100vw - 28px));
+            overflow:hidden; border:1px solid #dfe5ec; border-radius:9px; background:#fff; box-shadow:0 16px 36px rgba(15,23,42,.16); }
+        .domain-option-row { min-height:48px; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px; padding:5px 8px; }
+        .domain-option-row + .domain-option-row { border-top:1px solid #eef2f6; }
+        .domain-option { min-width:0; min-height:38px; display:grid; grid-template-columns:16px minmax(0,1fr) 14px; align-items:center; gap:8px;
+            padding:6px; border-radius:6px; color:#1e293b; font-size:12px; text-align:left; }
+        .domain-option:hover { background:#f8fafc; }
+        .domain-option span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .domain-selected-check { justify-self:end; color:#3933d8; font-size:11px; }
+        .domain-make-default { min-height:34px; padding:6px 7px; border-radius:6px; color:#3933d8; font-size:10px; font-weight:750; white-space:nowrap; }
+        .domain-make-default:hover { background:#f3f2ff; }
+        .domain-preference-row { min-height:28px; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:7px; }
+        .domain-remember { display:inline-flex; align-items:center; gap:7px; color:#475569; font-size:11px; line-height:1.35; cursor:pointer; }
+        .domain-remember input { width:15px; height:15px; accent-color:#3933d8; }
+        .domain-remember input:disabled { opacity:1; }
+        .domain-manage { color:#3933d8; font-size:11px; font-weight:650; white-space:nowrap; }
+        .domain-manage:hover { text-decoration:underline; }
+        .bulk-domain-block { max-width:360px; }
+        .bulk-domain-block .domain-trigger { border-radius:7px; }
+        @media (min-width:721px) {
+            .short-composer { position:relative; padding-bottom:35px; }
+            .short-composer .domain-preference-row { position:absolute; left:0; right:0; top:51px; }
+        }
+        textarea.dashboard-input { resize:vertical; }
+        .bulk-urls { min-height:122px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+        .bulk-urls.one-url-mode { min-height:64px; resize:none; }
+        .bulk-mode-guide { display:grid; gap:7px; }
+        .bulk-mode-title { margin:0; color:#1e293b; font-size:13px; line-height:1.35; font-weight:800; }
+        .bulk-mode-subtitle { margin:0; color:#64748b; font-size:11px; line-height:1.4; }
+        .bulk-mode-option { display:flex; align-items:flex-start; gap:7px; margin:0; color:#475569; font-size:11px; line-height:1.4; }
+        .bulk-mode-option i { width:14px; margin-top:2px; color:#5148e5; text-align:center; }
+        .bulk-per-image-row { display:flex; align-items:center; gap:10px; margin-top:3px; padding:10px 0; border-top:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; cursor:pointer; }
+        .bulk-per-image-toggle { position:relative; width:36px; height:20px; flex:0 0 auto; }
+        .bulk-per-image-toggle input { position:absolute; width:1px; height:1px; opacity:0; }
+        .bulk-per-image-track { position:absolute; inset:0; border-radius:999px; background:#cbd5e1; transition:background .15s; }
+        .bulk-per-image-track::after { content:''; position:absolute; top:3px; left:3px; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(15,23,42,.3); transition:transform .15s; }
+        .bulk-per-image-toggle input:checked + .bulk-per-image-track { background:#3933d8; }
+        .bulk-per-image-toggle input:checked + .bulk-per-image-track::after { transform:translateX(16px); }
+        .bulk-per-image-toggle input:focus-visible + .bulk-per-image-track { outline:2px solid #5148e5; outline-offset:2px; }
+        .bulk-per-image-copy { min-width:0; }
+        .bulk-per-image-label { display:block; color:#334155; font-size:12px; line-height:1.3; font-weight:700; }
+        .bulk-per-image-help { display:block; margin-top:2px; color:#64748b; font-size:10px; line-height:1.35; }
+        .image-tools { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.75fr); gap:10px; align-items:end; }
+        .upload-button { min-height:42px; border:1px dashed #8d88ed; border-radius:7px; color:#3730d9; background:#fafaff; display:flex; align-items:center; justify-content:center; gap:8px; padding:9px 12px; font-size:13px; font-weight:700; cursor:pointer; }
+        .upload-button:hover { background:#f4f3ff; }
+        .image-help { color:#64748b; font-size:11px; line-height:1.45; margin-top:5px; }
+        #singleImagePreview { width:min(100%,580px); }
+        .single-preview { position:relative; width:100%; aspect-ratio:1200/630; border:1px solid #dfe5ec; border-radius:8px; overflow:hidden; background:#f8fafc; }
+        .single-preview img { width:100%; height:100%; object-fit:contain; background:#eef2f7; }
+        .preview-size { position:absolute; left:10px; top:10px; z-index:2; padding:4px 7px; border-radius:5px; background:rgba(255,255,255,.9); color:#334155; font-size:11px; font-weight:700; }
+        .preview-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; }
+        .preview-label { color:#64748b; font-size:11px; line-height:1.35; }
+        .preview-actions { display:flex; gap:7px; flex:0 0 auto; }
+        .quiet-button { border:1px solid #cfd8e3; border-radius:6px; padding:7px 10px; background:#fff; color:#3730d9; font-size:12px; font-weight:600; }
+        .quiet-button.danger { color:#dc2626; border-color:#fecaca; }
+        .primary-action { width:100%; min-height:43px; border-radius:7px; background:#3933d8; color:#fff; font-size:15px; font-weight:700; box-shadow:0 3px 10px rgba(57,51,216,.18); }
+        .primary-action:hover { background:#302ac7; }
+        .primary-action:disabled { opacity:.65; cursor:wait; }
+        .traffic-trust-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px 8px; margin-top:8px; color:#64748b; font-size:12px; line-height:1.35; text-align:center; }
+        .traffic-trust-row .trust-icon { color:#10b981; font-size:13px; }
+        .traffic-trust-row .trust-separator { color:#94a3b8; }
+        .keep-row { display:flex; align-items:center; gap:9px; padding:10px 12px; margin-top:12px; border:1px solid #e2e8f0; border-radius:7px; color:#334155; font-size:12px; font-weight:500; cursor:pointer; }
+        .keep-row input { width:17px; height:17px; accent-color:#3933d8; }
+        .quick-reuse { margin-top:14px; padding-top:14px; border-top:1px solid #e2e8f0; }
+        .quick-reuse[hidden] { display:none; }
+        .quick-reuse-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:9px; }
+        .quick-reuse-title { color:#111827; font-size:15px; line-height:1.2; font-weight:750; }
+        .quick-reuse-subtitle { margin-top:2px; color:#64748b; font-size:10px; line-height:1.35; }
+        .quick-reuse-device { display:flex; align-items:center; gap:6px; color:#64748b; font-size:10px; white-space:nowrap; }
+        .quick-reuse-clear { color:#3730d9; font-size:10px; font-weight:650; }
+        .quick-reuse-clear:hover { text-decoration:underline; }
+        .quick-reuse-list { display:grid; gap:7px; }
+        .quick-reuse-item { display:grid; grid-template-columns:34px minmax(0,1fr) auto; gap:9px; align-items:center; min-width:0; padding:9px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; }
+        .quick-reuse-item.is-top { border-color:#aaa6fa; background:#fafaff; }
+        .quick-reuse-rank { width:34px; height:34px; display:grid; place-items:center; border-radius:8px; background:#eef2f7; color:#475569; font-size:13px; font-weight:750; font-variant-numeric:tabular-nums; }
+        .quick-reuse-item.is-top .quick-reuse-rank { background:#3933d8; color:#fff; }
+        .quick-reuse-copy { min-width:0; }
+        .quick-reuse-url { overflow:hidden; color:#3730d9; font-size:12px; line-height:1.25; font-weight:700; white-space:nowrap; text-overflow:ellipsis; }
+        .quick-reuse-name { overflow:hidden; margin-top:2px; color:#334155; font-size:11px; line-height:1.25; white-space:nowrap; text-overflow:ellipsis; }
+        .quick-reuse-meta { margin-top:3px; color:#64748b; font-size:10px; line-height:1.25; }
+        .quick-reuse-use { min-width:86px; border:1px solid #aaa6fa; border-radius:7px; padding:7px 9px; background:#fff; color:#3730d9; font-size:11px; font-weight:700; white-space:nowrap; }
+        .quick-reuse-use:hover { background:#f4f3ff; }
+        .quick-reuse-use:focus-visible,.quick-reuse-clear:focus-visible { outline:2px solid #5148e5; outline-offset:2px; }
+        #resultTray { margin-top:12px; border:1px solid #dfe5ec; border-radius:8px; background:#fff; padding:12px; }
+        .result-items-list { display:grid; }
+        .result-item-row { display:grid; grid-template-columns:44px minmax(0,1fr) 30px 30px; gap:9px; align-items:center; min-width:0; padding:7px 0; border-top:1px solid #eef2f6; }
+        .result-item-thumb { width:44px; height:34px; border-radius:6px; overflow:hidden; display:grid; place-items:center; background:#f1f5f9; color:#cbd5e1; font-size:13px; }
+        .result-item-thumb img { width:100%; height:100%; object-fit:cover; }
+        .result-item-main { min-width:0; display:grid; gap:2px; }
+        .result-item-short { color:#7c3aed; font-size:12px; line-height:1.25; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .result-item-destination { min-width:0; color:#94a3b8; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:10px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .result-item-destination-target-mobile { display:none; }
+        .result-item-destination.has-attribution .result-item-destination-meta::before { content:' | '; }
+        .result-item-action { width:30px; height:30px; display:grid; place-items:center; border-radius:6px; }
+        .result-item-action:hover { background:#f1f5f9; }
+
+        .bulk-images { display:flex; flex-wrap:wrap; gap:10px; align-items:stretch; }
+        .bulk-recovery { border:1px solid #f0c38e; border-radius:8px; padding:12px; margin-top:12px; background:#fffaf3; }
+        .recovery-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid #efdcca; }
+        .recovery-row p,.recovery-row input { flex-basis:100%; }
+        .recovery-retry { border:1px solid #b8acdb; border-radius:6px; min-height:36px; padding:6px 10px; }
+        .recovery-retry:disabled { opacity:.5; }
+        .recovery-short { overflow-wrap:anywhere; }
+        .bulk-url-warning { margin:6px 0 0; color:#b91c1c; font-size:12px; line-height:1.5; }
+        .bulk-url-warning[hidden],.upload-recovery[hidden] { display:none; }
+        .bulk-url-warning button { color:inherit; text-decoration:underline; padding:6px; min-height:36px; }
+        .bulk-recovery summary { cursor:pointer; padding:6px 0; font-size:13px; }
+        .bulk-recovery input { min-width:0; width:100%; }
+        .upload-recovery { margin:8px 0 0; font-size:13px; line-height:1.5; color:#334155; }
+        .upload-recovery button { min-height:36px; padding:4px 6px; margin-left:3px; border:0; background:transparent; color:#4f46e5; font:inherit; font-weight:600; cursor:pointer; }
+        .upload-recovery button:hover { text-decoration:underline; }
+        .upload-recovery button:focus-visible { outline:2px solid #4f46e5; outline-offset:2px; border-radius:3px; }
+        .upload-recovery button:disabled { opacity:.5; cursor:default; }
+        .upload-recovery-note { display:block; color:#64748b; font-size:12px; }
+
+        #bulkImagePool { display:flex; flex-wrap:wrap; gap:10px; }
+        #bulkImagePool > div { width:132px !important; height:86px !important; border-radius:7px !important; }
+        .add-images-tile { width:132px; height:86px; border:1px dashed #8d88ed; border-radius:7px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:#3730d9; background:#fafaff; cursor:pointer; font-size:12px; font-weight:600; }
+        .bulk-clear-images { align-self:center; min-height:36px; padding:8px 10px; border:1px solid #b91c1c; border-radius:6px; background:#fff; color:#b91c1c; font-size:12px; font-weight:600; cursor:pointer; }
+        .bulk-clear-images:hover:not(:disabled) { background:#fef2f2; border-color:#991b1b; }
+        .bulk-clear-images:active:not(:disabled) { background:#b91c1c; border-color:#991b1b; color:#fff; }
+        .bulk-clear-images:focus-visible,#bulkImagePicker:focus-visible + .add-images-tile { outline:2px solid #5148e5; outline-offset:2px; }
+        .bulk-clear-images:disabled { color:#64748b; border-color:#d8dce5; background:#f8fafc; cursor:default; }
+        .bulk-clear-images:disabled.is-cleared { background:#b91c1c; border-color:#991b1b; color:#fff; }
+        .add-images-tile i { width:28px; height:28px; border-radius:999px; background:#3933d8; color:#fff; display:grid; place-items:center; }
+
+        .links-heading-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+        .links-heading { color:#111827; font-size:17px; line-height:1.2; font-weight:700; }
+        .link-count { color:#64748b; font-size:11px; font-weight:500; margin-left:5px; }
+        .link-search { display:grid; grid-template-columns:minmax(0,1fr) 118px; gap:9px; margin-bottom:12px; }
+        .search-field { position:relative; }
+        .search-field .dashboard-input { padding-right:38px; }
+        .search-submit { position:absolute; right:3px; top:3px; width:34px; height:34px; display:grid; place-items:center; color:#334155; border-radius:6px; }
+        .search-submit:hover { background:#f1f5f9; }
+        .links-list { border:1px solid #e1e7ee; border-radius:8px; overflow:visible; }
+        .links-list > [id^="link-card-"] + [id^="link-card-"] { border-top:1px solid #e8edf2; }
+        .link-row { display:grid; grid-template-columns:10px 58px minmax(0,1fr) auto auto; gap:10px; align-items:center; padding:10px; background:#fff; }
+        .link-status { width:9px; height:9px; border-radius:999px; background:#079669; }
+        .link-thumb { width:58px; height:44px; border-radius:6px; overflow:hidden; background:#f1f5f9; display:grid; place-items:center; color:#cbd5e1; }
+        .link-thumb img { width:100%; height:100%; object-fit:cover; }
+        .link-main { min-width:0; }
+        .link-title { color:#1f2937; font-size:13px; line-height:1.25; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .link-short-line { display:flex; align-items:center; gap:6px; min-width:0; margin-top:2px; }
+        .link-short { color:#3730d9; font-size:12px; line-height:1.25; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .link-copy { color:#3730d9; font-size:12px; flex:0 0 auto; }
+        .link-meta,.link-description { color:#64748b; font-size:10px; line-height:1.35; margin-top:2px; overflow-wrap:anywhere; }
+        .link-description { color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .link-clicks { min-width:72px; display:inline-flex; align-items:center; justify-content:flex-end; gap:4px; color:#475569; font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .link-clicks i { font-size:10px; }
+        .link-clicks-value { color:#334155; font-weight:700; }
+        .link-clicks-unit { color:#64748b; font-size:10px; font-weight:600; letter-spacing:.01em; }
+        .link-actions { position:relative; }
+        .kebab-toggle { width:28px; height:28px; display:grid; place-items:center; color:#334155; border-radius:6px; }
+        .kebab-toggle:hover { background:#f1f5f9; }
+        .pagination-wrap { margin-top:14px; padding-top:12px; border-top:1px solid #eef2f6; }
+        .mobile-stats { display:none; }
+        .feedback-prompt[hidden],.feedback-modal[hidden],.feedback-reach-reasons[hidden],.feedback-message[hidden] { display:none; }
+        .feedback-prompt { position:fixed; z-index:80; left:50%; bottom:14px; transform:translateX(-50%); width:min(680px,calc(100% - 24px)); border:1px solid #d7dbea; border-radius:14px; padding:18px 20px 14px; background:#fff; box-shadow:0 18px 55px rgba(15,23,42,.2); text-align:center; }
+        .feedback-prompt-close { position:absolute; top:6px; right:6px; width:44px; height:44px; display:grid; place-items:center; border-radius:999px; color:#64748b; }
+        .feedback-prompt-close:hover { background:#f1f5f9; }
+        .feedback-prompt-title { padding:0 30px; color:#111827; font-size:18px; line-height:1.25; font-weight:750; }
+        .feedback-prompt-subtitle { margin-top:3px; color:#64748b; font-size:12px; }
+        .feedback-prompt-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:16px; }
+        .feedback-tap { min-height:44px; display:flex; align-items:center; justify-content:center; gap:7px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; color:#475569; font-size:14px; font-weight:650; }
+        .feedback-tap.good { border-color:#86c994; color:#16803a; background:#f7fff8; }
+        .feedback-tap.problem { border-color:#f2a1a1; color:#dc2626; background:#fffafa; }
+        .feedback-tap:hover,.feedback-category:hover { background:#f8fafc; }
+        .feedback-more { min-height:44px; display:inline-flex; align-items:center; justify-content:center; margin-top:7px; padding:0 8px; color:#3730d9; font-size:13px; text-decoration:underline; }
+        .feedback-backdrop { position:fixed; z-index:89; inset:0; background:rgba(15,23,42,.4); }
+        .feedback-sheet { position:fixed; z-index:90; left:50%; bottom:0; transform:translateX(-50%); width:min(680px,100%); max-height:min(90vh,760px); max-height:min(90dvh,760px); overflow:auto; border-radius:18px 18px 0 0; padding:18px 22px calc(20px + env(safe-area-inset-bottom)); background:#fff; box-shadow:0 -18px 55px rgba(15,23,42,.25); }
+        .feedback-sheet-handle { width:42px; height:4px; margin:0 auto 13px; border-radius:999px; background:#cbd5e1; }
+        .feedback-sheet-title { color:#111827; font-size:21px; line-height:1.25; font-weight:800; text-align:center; }
+        .feedback-sheet-subtitle { margin-top:4px; color:#64748b; font-size:13px; text-align:center; }
+        .feedback-link-context { margin-top:10px; padding:8px 10px; border-radius:7px; background:#f5f4ff; color:#3730d9; font-size:12px; text-align:center; }
+        .feedback-categories { display:grid; gap:9px; margin-top:17px; }
+        .feedback-category { min-height:46px; display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; border:1px solid #dbe1e8; border-radius:9px; padding:10px 14px; background:#fff; color:#3730d9; font-size:14px; font-weight:600; text-align:left; }
+        .feedback-category.is-selected { border-color:#5148e5; background:#f5f4ff; box-shadow:0 0 0 1px #5148e5 inset; }
+        .feedback-category.is-expanded { border-radius:9px 9px 0 0; }
+        .feedback-reach-reasons { margin-top:-9px; padding:12px; border:1px solid #5148e5; border-top:0; border-radius:0 0 9px 9px; background:#fafaff; }
+        .feedback-reach-question { margin-bottom:9px; color:#334155; font-size:13px; font-weight:700; }
+        .feedback-reach-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+        .feedback-reach-option { min-height:44px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#334155; font-size:12px; font-weight:650; text-align:center; }
+        .feedback-reach-option:hover { background:#f5f4ff; }
+        .feedback-reach-option.is-selected { border-color:#5148e5; background:#eeecff; color:#3730d9; box-shadow:0 0 0 1px #5148e5 inset; }
+        .feedback-message { width:100%; min-height:90px; margin-top:12px; resize:vertical; border:1px solid #dbe1e8; border-radius:9px; padding:11px 12px; color:#1f2937; font-size:14px; line-height:1.45; }
+        .feedback-message:focus { outline:2px solid #aaa6fa; outline-offset:1px; }
+        .feedback-send { width:100%; min-height:46px; margin-top:12px; border-radius:9px; background:#3933d8; color:#fff; font-size:15px; font-weight:750; }
+        .feedback-send:disabled { opacity:.55; cursor:not-allowed; }
+        .feedback-not-now { min-height:44px; display:flex; align-items:center; justify-content:center; margin:6px auto 0; padding:0 12px; color:#3730d9; font-size:14px; font-weight:650; }
+        .feedback-link-report { min-height:44px; }
+        .feedback-privacy { margin-top:10px; color:#64748b; font-size:11px; text-align:center; }
+
+        @media (max-width:1023px) {
+            .dashboard-shell { padding:0 14px 22px; }
+            .dashboard-topbar { margin:0 -14px 12px; padding:8px 14px; min-height:58px; }
+            .dashboard-metrics { display:none; }
+            .dashboard-brand-name { font-size:18px; }
+            .brand-icons { font-size:22px; }
+            .shield-wrap { margin-left:auto; }
+            .account-wrap { margin-left:0; }
+            .dashboard-grid { grid-template-columns:1fr; gap:12px; }
+            .workspace-panel,.links-panel { border-radius:8px; }
+            .workspace-panel { padding:12px; }
+            .links-panel { padding:12px; }
+            .links-panel { order:2; }
+            .field-grid,.image-tools { grid-template-columns:1fr; }
+            .short-composer { grid-template-columns:minmax(150px,190px) minmax(0,1fr); }
+            .dashboard-tabs { margin-bottom:13px; }
+            .dashboard-tab { min-height:40px; }
+            .bulk-urls { min-height:144px; }
+            #bulkImagePool > div,.add-images-tile { width:calc(25% - 8px) !important; min-width:72px; height:auto !important; aspect-ratio:1.42/1; }
+            .result-item-destination.has-attribution { display:grid; grid-template-columns:minmax(0,1fr); gap:1px; white-space:normal; overflow:visible; text-overflow:clip; }
+            .result-item-destination-target { min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .result-item-destination-target-desktop { display:none; }
+            .result-item-destination-target-mobile { display:block; }
+            .result-item-destination-meta { min-width:0; white-space:normal; overflow:visible; overflow-wrap:anywhere; text-overflow:clip; }
+            .result-item-destination.has-attribution .result-item-destination-meta::before { content:''; }
+            .mobile-stats { display:grid; grid-template-columns:23% 37% 40%; gap:0; margin:0 0 12px; overflow:hidden; border:1px solid #dfe5ec; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(15,23,42,.03); }
+            .mobile-stat { min-width:0; min-height:56px; display:grid; grid-template-columns:22px minmax(0,1fr); grid-template-rows:auto auto; column-gap:5px; row-gap:2px; align-items:center; padding:7px 8px; }
+            .mobile-stat + .mobile-stat { border-left:1px solid #e5e7eb; }
+            .mobile-stat-icon { grid-column:1; grid-row:1; width:22px; height:22px; display:grid; place-items:center; border-radius:6px; background:#f5f4ff; color:#3730d9; font-size:12px; }
+            .mobile-stat-label { grid-column:2; grid-row:1; min-width:0; overflow:hidden; color:#64748b; font-size:9px; line-height:1.15; white-space:nowrap; text-overflow:ellipsis; }
+            .mobile-stat-value-row { grid-column:1 / -1; grid-row:2; min-width:0; display:flex; flex-wrap:wrap; align-items:center; gap:3px; }
+            .mobile-stat-value { color:#111827; font-size:14px; line-height:1.1; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+            .mobile-stat .today-pill { display:inline-flex; width:auto; max-width:none; margin:0; padding:2px 4px; gap:2px; font-size:8px; line-height:1.1; }
+            .mobile-stat .community-trend { margin-left:2px; font-size:7px; }
+            .community-mobile-stat .mobile-stat-label { font-size:8.5px; }
+            .community-mobile-stat .mobile-stat-value-row { align-items:flex-start; flex-direction:column; gap:2px; }
+            .community-mobile-stat .community-scope { margin-top:0; padding:2px 4px; font-size:7px; }
+        }
+        @media (max-width:520px) {
+            .dashboard-shell { padding-left:10px; padding-right:10px; }
+            .dashboard-topbar { margin-left:-10px; margin-right:-10px; padding-left:10px; padding-right:10px; gap:8px; }
+            .dashboard-brand { gap:8px; }
+            .brand-icons { gap:6px; font-size:20px; }
+            .dashboard-brand-name { font-size:16px; }
+            .shield-button { width:42px; height:40px; }
+            .account-button { width:46px; height:40px; }
+            .shield-panel { position:fixed; left:10px; right:10px; top:66px; width:auto; max-width:none;
+                max-height:calc(100vh - 76px); max-height:calc(100dvh - 76px); overflow:auto; }
+            .shield-days { max-height:246px; }
+            .creator-form { gap:12px; }
+            .short-composer { grid-template-columns:1fr; gap:8px; }
+            .short-composer .domain-trigger,.short-composer .dashboard-input { border:1px solid #cfd8e3; border-radius:7px; }
+            .domain-trigger,.domain-option-row { min-height:44px; }
+            .domain-menu { width:100%; max-width:100%; }
+            .domain-preference-row { align-items:flex-start; }
+            .bulk-domain-block { max-width:none; }
+            .field label,.field-label { font-size:12px; }
+            .dashboard-input { font-size:14px; padding:10px; }
+            .links-heading { font-size:15px; }
+            .link-search { grid-template-columns:minmax(0,1fr) 100px; }
+            .links-list > [id^="link-card-"] + [id^="link-card-"] { border-top:6px solid #f1f5f9; }
+            .link-row { grid-template-columns:8px 48px minmax(0,1fr) auto auto; grid-template-rows:auto auto auto; column-gap:6px; row-gap:3px; padding:9px 8px 0; }
+            .link-main { display:contents; }
+            .link-status { grid-column:1; grid-row:1 / span 2; justify-self:center; }
+            .link-thumb { grid-column:2; grid-row:1 / span 2; width:48px; height:42px; }
+            .link-title { grid-column:3; grid-row:1; align-self:end; font-size:12px; }
+            .link-meta { grid-column:3 / -1; grid-row:2; align-self:start; margin-top:0; font-size:10.5px; }
+            .link-short-line { grid-column:1 / -1; grid-row:3; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:0; min-width:0; min-height:52px; align-items:center; margin:6px -8px 0; padding:4px 8px; border-top:1px solid #e8edf2; background:#fafaff; }
+            .link-short { min-width:0; padding-right:10px; font-size:11px; overflow:visible; text-overflow:clip; white-space:normal; overflow-wrap:anywhere; }
+            .link-copy { min-width:62px; height:44px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:0 2px 0 11px; border:0; border-left:1px solid #dfe3ec; border-radius:0; background:transparent; color:#3730d9; font-size:13px; font-weight:700; }
+            .link-copy::after { content:'Copy'; }
+            .link-copy:hover,.link-copy:active { background:#f3f2ff; }
+            .link-copy:focus-visible { outline:2px solid #5148e5; outline-offset:2px; }
+            .link-clicks { grid-column:4; grid-row:1; align-self:end; min-width:54px; gap:3px; font-size:11px; }
+            .link-clicks-unit { font-size:9px; }
+            .link-actions { grid-column:5; grid-row:1; align-self:end; }
+            .link-description { display:none; }
+            .single-preview { border-radius:7px; }
+            .preview-footer { align-items:flex-start; flex-direction:column; }
+            .mobile-stat { min-height:54px; grid-template-columns:18px minmax(0,1fr); column-gap:3px; padding:6px 4px; }
+            .mobile-stat-icon { width:18px; height:18px; font-size:10px; }
+            .mobile-stat-label { font-size:8.5px; }
+            .mobile-stat-value { font-size:13px; }
+            .community-mobile-stat .community-scope { max-width:100%; overflow:hidden; font-size:7.5px; text-overflow:ellipsis; }
+            .result-item-row { grid-template-columns:40px minmax(0,1fr) 28px 28px; gap:7px; padding:7px 0; }
+            .result-item-thumb { width:40px; height:32px; border-radius:5px; }
+            .result-item-action { width:28px; height:28px; }
+            .quick-reuse-head { gap:8px; }
+            .quick-reuse-subtitle { display:none; }
+            .quick-reuse-item { grid-template-columns:32px minmax(0,1fr) auto; gap:8px; padding:8px; }
+            .quick-reuse-rank { width:32px; height:32px; }
+            .quick-reuse-use { min-width:82px; padding:7px 8px; }
+            .quick-reuse-item:nth-child(n+3) { display:none; }
+            .feedback-prompt { bottom:max(8px,env(safe-area-inset-bottom)); width:calc(100% - 16px); padding:16px 12px 12px; }
+            .feedback-prompt-actions { gap:7px; }
+            .feedback-tap { min-height:44px; padding:6px; font-size:12px; }
+            .feedback-sheet { padding:14px 14px calc(18px + env(safe-area-inset-bottom)); }
+            .feedback-sheet-title { font-size:19px; }
+            .feedback-reach-options { grid-template-columns:1fr; }
+        }
+        .last-copy-area{background-color:#eeecfb!important;box-shadow:inset 0 0 0 1px #c3bde9}
+        [data-copy-tick] i{color:#166534}
+        /* Quick Reuse: saved details and optional existing Bulk workflow. */
+.quick-reuse-subtitle{display:block!important;font-size:12px;line-height:1.45;color:#596579}
+.quick-reuse-device>span{display:none}
+.quick-reuse-clear{font-size:13px;min-height:44px;padding:8px 0 8px 12px}
+.quick-reuse-head{align-items:center;margin-bottom:8px}
+.quick-reuse-title{font-size:17px}
+.quick-reuse-item,.quick-reuse-item.is-top{grid-template-columns:44px minmax(0,1fr) auto;padding:10px;gap:10px;background:#fff;border-color:#e2e8f0}
+.quick-reuse-item:nth-child(n+3){display:grid}
+.quick-reuse-rank,.quick-reuse-item.is-top .quick-reuse-rank{width:44px;height:44px;border-radius:6px;background:#f1f5f9;color:#64748b;overflow:hidden}
+.quick-reuse-rank img{width:44px;height:44px;object-fit:cover}
+.quick-reuse-name{font-size:14px;line-height:1.35;font-weight:700;color:#1e293b;margin:0;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.quick-reuse-url{font-size:12px;font-weight:400;color:#596579;line-height:1.35;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.quick-reuse-description{font-size:12px;line-height:1.35;color:#596579;overflow:hidden;white-space:normal;overflow-wrap:anywhere;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.quick-reuse-query-hint{font-size:12px;line-height:1.4;font-weight:650;color:#3730a3;overflow:hidden;overflow-wrap:anywhere;margin:3px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.quick-reuse-meta{font-size:12px;line-height:1.4;margin-top:4px;color:#4b5563;font-weight:650}
+.quick-reuse-use{min-width:94px;min-height:44px;font-size:12px;padding:9px;border-radius:6px}
+.quick-reuse-item.is-filled{background:#f2fbf5;border-color:#b6dfc4}
+.quick-reuse-item.is-filled .quick-reuse-use{color:#16803c;border-color:#86ba99;background:#f2fbf5}
+.quick-reuse-check{margin-right:6px}
+.quick-reuse-filled-field{border-color:#83c79c!important;background:#f3fbf5!important;box-shadow:inset 3px 0 #16803c!important}
+.quick-reuse-feedback{font-size:13px;line-height:1.45;font-weight:650;color:#16803c;padding:4px 0;scroll-margin-top:16px}
+.quick-reuse-feedback[hidden]{display:none}
+.quick-reuse-feedback i{margin-right:6px}
+.creator-form{scroll-margin-top:16px}
+.quick-reuse-use:disabled{opacity:.55;cursor:wait}
+.quick-reuse-image-note{font-size:11px;line-height:1.4;color:#596579;margin-top:2px}
+.quick-reuse-image-note[hidden]{display:none}
+.quick-reuse-bulk .quick-reuse-rank{display:none}
+.quick-reuse-bulk .quick-reuse-item{grid-template-columns:minmax(0,1fr) auto}
+.quick-reuse-full-text{font-size:12px;color:#4b5563;margin-top:4px;grid-column:1/-1}
+.quick-reuse-full-text summary,#quickReuseEarlier>summary{cursor:pointer;min-height:36px;display:list-item;align-content:center;color:#3730a3;font-weight:600;outline-offset:3px}
+.quick-reuse-full-text>div{max-height:240px;overflow:auto;overflow-wrap:anywhere;white-space:pre-wrap;padding:6px 0}
+.quick-reuse-full-text p{margin:4px 0}
+.quick-reuse-full-text[hidden],#quickReuseEarlier[hidden],.quick-reuse-history-note[hidden]{display:none}
+#quickReuseEarlier{border-top:1px solid #e2e8f0;margin-top:12px;padding-top:8px}
+#quickReuseEarlier>summary{font-size:13px}
+#quickReuseMore{margin-top:8px}
+#quickReuseMore[hidden]{display:none}
+#quickReuseMore>summary{cursor:pointer;min-height:44px;display:list-item;align-content:center;color:#3730a3;font-size:13px;font-weight:600;outline-offset:3px}
+.quick-reuse-history-note{font-size:12px;line-height:1.5;color:#596579;margin:6px 0 10px}
+@media(max-width:400px){.quick-reuse-item{gap:8px;padding:8px;grid-template-columns:36px minmax(0,1fr) auto}.quick-reuse-rank,.quick-reuse-item.is-top .quick-reuse-rank,.quick-reuse-rank img{width:36px;height:40px}.quick-reuse-use{min-width:84px;padding:8px 6px}}
+
+.bulk-shortcut { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; margin:12px 0; color:#475569; font-size:13px; }
+.bulk-shortcut[hidden], .bulk-shortcut-notice[hidden], .bulk-shortcut-filled[hidden] { display:none; }
+.bulk-shortcut small { flex-basis:100%; font-size:12px; line-height:1.5; }
+.bulk-shortcut-action { color:#3730a3; background:transparent; border:0; padding:10px 2px; min-height:44px; font:inherit; font-weight:650; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.bulk-shortcut-action:focus-visible { outline:3px solid #4338ca; outline-offset:2px; border-radius:3px; }
+.bulk-shortcut-notice { background:#f5f4ff; border:1px solid #c7d2fe; border-radius:8px; padding:12px; margin:12px 0; font-size:14px; }
+.bulk-shortcut-notice p { margin:5px 0; }
+.bulk-shortcut-notice>div { display:flex; flex-wrap:wrap; gap:6px 18px; }
+.bulk-shortcut-filled { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; border-radius:6px; padding:10px 12px; margin:10px 0; font-size:14px; }
+
+    </style>
+    <!-- Clarity: delay recording until the page has loaded; early interactions are not recorded. -->
+    <!-- Clarity paused 2026-10-06; visibility attributes and event hooks retained. -->
+</head>
+<body data-clarity-mask="true" class="dashboard-body min-h-screen">
+    <div id="toast" class="toast hidden"></div>
+    <div id="copyAnnounce" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="dashboard-shell"
+         data-base-url="https://url6x.com"
+         data-csrf="b399f87fe07abc7d83fe93a2684aaebca7cf4efadb3c06a0ba030be6e7d29edd"
+         data-upload-scope="935ad91906de643e542615f7523a7df76e0fa683f69f31df12847343725d377d"
+         data-max-upload-bytes="2097152"
+         data-uid="8"
+         data-default-domain-id="2"
+         data-domain-preference-scope="browser"
+         data-shield-date="2026-11-09"
+         data-analytics-enabled="1"
+         data-analytics-id="G-9EEE61LG54"
+         data-analytics-site-key="url6x">
+
+        <!-- Compact authenticated header. Personal and community totals stay distinct. -->
+        <header class="dashboard-topbar">
+            <a class="dashboard-brand" href="https://url6x.com/" aria-label="URL6X home">
+                <span class="brand-icons" aria-hidden="true">
+                    <i class="fas fa-link"></i><i class="fas fa-bolt"></i><i class="fas fa-rocket"></i>
+                </span>
+                <span data-clarity-unmask="true" class="dashboard-brand-name">URL6X</span>
+            </a>
+
+            <div data-clarity-unmask="true" class="dashboard-metrics" aria-label="Account totals">
+                <div class="metric">
+                    <span class="metric-icon"><i class="fas fa-link"></i></span>
+                    <span><span class="metric-label">Your links</span><strong class="metric-value block" id="totalLinks">125,103</strong></span>
+                </div>
+                <div class="metric">
+                    <span class="metric-icon"><i class="fas fa-chart-line"></i></span>
+                    <span><span class="metric-label">Your link clicks</span><strong class="metric-value block" id="totalClicks">4.113M</strong></span>
+                    <span class="today-pill"><i class="fas fa-arrow-trend-up"></i>+2,318 today</span>                </div>
+                                <div class="metric community-metric" title="Exact community clicks: 9,674,799 lifetime; 3,072 today; admin links excluded. Last updated 09 Nov 2026 03:30:18 IST">
+                    <span class="metric-icon community-icon" aria-hidden="true"><i class="fas fa-users"></i></span>
+                    <span class="community-copy"><span class="metric-label">Community clicks<i class="fas fa-arrow-trend-up community-trend" aria-hidden="true"></i></span><strong class="metric-value block">9.674M</strong><span class="today-pill"><i class="fas fa-arrow-trend-up" aria-hidden="true"></i>+3,072 today</span></span>
+                </div>
+                            </div>
+
+            <div class="shield-wrap">
+                <button type="button" id="shieldBell" class="shield-button"
+                        aria-label="Open traffic protection report" aria-haspopup="true"
+                        aria-controls="shieldPanel" aria-expanded="false">
+                    <i class="fas fa-shield-alt shield-icon" aria-hidden="true"></i>
+                    <span class="shield-dot" aria-hidden="true"></span>
+                </button>
+                <section id="shieldPanel" class="shield-panel hidden" aria-label="Traffic protection report">
+                    <div class="shield-panel-head">
+                        <div data-clarity-unmask="true" class="shield-panel-title">
+                            <span class="shield-panel-title-icon" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
+                            <span><strong>Free Traffic Protection</strong><small>Active on every link</small></span>
+                        </div>
+                        <p data-clarity-unmask="true" class="shield-summary">
+                            <strong>Yesterday, we kept <span id="shieldYesterday">—</span> automated requests out of your click count.</strong>
+                        </p>
+                        <p data-clarity-unmask="true" id="shieldStatus" class="shield-summary-note">Loading compact daily protection history…</p>
+                    </div>
+                    <div id="shieldDays" class="shield-days" aria-live="polite">
+                        <p class="shield-row"><span>Loading your seven-day history…</span></p>
+                    </div>
+                    <div data-clarity-unmask="true" class="shield-footer">
+                        <span data-clarity-unmask="true" id="shieldHistoryLabel">Filtered over the last 7 days</span>
+                        <strong data-clarity-unmask="true" id="shieldHistoryTotal">—</strong>
+                    </div>
+                    <p class="shield-summary-note">Current-link filtered total, including migrated history: <strong data-clarity-unmask="true" id="shieldTotal">—</strong></p>
+                </section>
+            </div>
+
+            <div class="account-wrap">
+                <button type="button" id="accountMenuButton" class="account-button" aria-label="Open account menu" aria-expanded="false">
+                    <i class="fas fa-user"></i><i class="fas fa-chevron-down text-xs"></i>
+                </button>
+                <nav id="accountMenu" class="account-menu hidden" aria-label="Account menu">
+                                        <form action="index.php" method="get">
+                        <input type="hidden" name="logout" value="1">
+                        <input type="hidden" name="token" value="b399f87fe07abc7d83fe93a2684aaebca7cf4efadb3c06a0ba030be6e7d29edd">
+                        <button type="submit" class="logout-link" data-clarity-unmask="true"><i class="fas fa-sign-out-alt"></i>Logout</button>
+                    </form>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Mobile-only compact totals stay immediately visible below the header. -->
+        <section data-clarity-unmask="true" class="mobile-stats" aria-label="Account totals">
+            <div class="mobile-stat">
+                <span class="mobile-stat-icon" aria-hidden="true"><i class="fas fa-link"></i></span>
+                <p class="mobile-stat-label">Your links</p>
+                <div class="mobile-stat-value-row">
+                    <p class="mobile-stat-value" data-mobile-total-links>125,103</p>
+                </div>
+            </div>
+            <div class="mobile-stat">
+                <span class="mobile-stat-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+                <p class="mobile-stat-label">Your link clicks</p>
+                <div class="mobile-stat-value-row">
+                    <p class="mobile-stat-value">4.113M</p>
+                    <span class="today-pill"><i class="fas fa-arrow-trend-up" aria-hidden="true"></i>+2,318 today</span>                </div>
+            </div>
+                        <div class="mobile-stat community-mobile-stat" title="Exact community clicks: 9,674,799 lifetime; 3,072 today; admin links excluded. Last updated 09 Nov 2026 03:30:18 IST">
+                <span class="mobile-stat-icon community-icon" aria-hidden="true"><i class="fas fa-users"></i></span>
+                <p class="mobile-stat-label">Community clicks<i class="fas fa-arrow-trend-up community-trend" aria-hidden="true"></i></p>
+                <div class="mobile-stat-value-row">
+                    <p class="mobile-stat-value">9.674M</p>
+                    <span class="today-pill"><i class="fas fa-arrow-trend-up" aria-hidden="true"></i>+3,072 today</span>
+                </div>
+            </div>
+                    </section>
+
+        <!-- Two-column workspace: create (left) + links list (right) on lg+ -->
+        <main class="dashboard-grid">
+
+        <!-- LEFT column: create workspace -->
+        <section class="workspace-panel">
+
+        <!-- Tabs -->
+        <div>
+            <div data-clarity-unmask="true" class="dashboard-tabs" role="tablist" aria-label="Create links">
+                <button type="button" id="singleTab" class="dashboard-tab tab-active" role="tab" aria-selected="true" onclick="switchTab('single')">Single Link</button>
+                <button type="button" id="bulkTab" class="dashboard-tab tab-inactive" role="tab" aria-selected="false" onclick="switchTab('bulk')">Bulk Links</button>
+            </div>
+
+            <div>
+                <!-- Single -->
+                <div id="singleForm">
+                    <form id="singleLinkForm" class="creator-form" enctype="multipart/form-data">
+                        <div class="field">
+                            <label data-clarity-unmask="true" for="singleDestination">Select a domain</label>
+                            <div class="short-composer">
+                                    <div class="domain-picker-wrap">
+    <div class="domain-picker" data-domain-picker>
+        <input type="hidden" name="domain_id" value="2" data-domain-input>
+        <button type="button" class="domain-trigger" data-domain-trigger
+                aria-label="Choose short domain, currently vidx1x.com"
+                aria-haspopup="menu" aria-expanded="false" aria-controls="singleDomainMenu">
+            <i class="fas fa-globe" aria-hidden="true"></i>
+            <span data-clarity-unmask="true" class="domain-trigger-host" data-domain-selected-host>vidx1x.com</span>
+            <span data-clarity-unmask="true" class="domain-default-badge" data-domain-trigger-default
+                  >Default</span>
+            <i class="fas fa-chevron-down domain-chevron" aria-hidden="true"></i>
+        </button>
+        <div id="singleDomainMenu" class="domain-menu" data-domain-menu role="menu" hidden>
+                                    <div class="domain-option-row" data-domain-row
+                 data-domain-id="2" data-domain-host="vidx1x.com">
+                <button data-clarity-unmask="true" type="button" class="domain-option" data-domain-select role="menuitemradio"
+                        aria-checked="true">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    <span>vidx1x.com</span>
+                    <i class="fas fa-check domain-selected-check" data-domain-selected-check
+                       aria-hidden="true" ></i>
+                </button>
+                <span data-clarity-unmask="true" class="domain-default-badge" data-domain-menu-default
+                      >Default</span>
+                <button data-clarity-unmask="true" type="button" class="domain-make-default" data-domain-make-default
+                        hidden>Make my default</button>
+            </div>
+                                    <div class="domain-option-row" data-domain-row
+                 data-domain-id="3" data-domain-host="plays9x.com">
+                <button data-clarity-unmask="true" type="button" class="domain-option" data-domain-select role="menuitemradio"
+                        aria-checked="false">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    <span>plays9x.com</span>
+                    <i class="fas fa-check domain-selected-check" data-domain-selected-check
+                       aria-hidden="true" hidden></i>
+                </button>
+                <span data-clarity-unmask="true" class="domain-default-badge" data-domain-menu-default
+                      hidden>Default</span>
+                <button data-clarity-unmask="true" type="button" class="domain-make-default" data-domain-make-default
+                        >Make my default</button>
+            </div>
+                                    <div class="domain-option-row" data-domain-row
+                 data-domain-id="4" data-domain-host="s9xply.com">
+                <button data-clarity-unmask="true" type="button" class="domain-option" data-domain-select role="menuitemradio"
+                        aria-checked="false">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    <span>s9xply.com</span>
+                    <i class="fas fa-check domain-selected-check" data-domain-selected-check
+                       aria-hidden="true" hidden></i>
+                </button>
+                <span data-clarity-unmask="true" class="domain-default-badge" data-domain-menu-default
+                      hidden>Default</span>
+                <button data-clarity-unmask="true" type="button" class="domain-make-default" data-domain-make-default
+                        >Make my default</button>
+            </div>
+                    </div>
+    </div>
+    <div class="domain-preference-row">
+        <label data-clarity-unmask="true" class="domain-remember">
+            <input type="checkbox" data-domain-remember
+                   checked disabled>
+            <span data-domain-remember-label>This is your default domain</span>
+        </label>
+            </div>
+    </div>
+                                    <input type="url" id="singleDestination" name="destination" required
+                                       placeholder="Paste destination URL" autocomplete="url" class="dashboard-input">
+                            </div>
+                        </div>
+                        <div class="field-grid">
+                            <div class="field"><label data-clarity-unmask="true">Title</label>
+                                <input type="text" name="title" placeholder="Link title (optional)"
+                                       class="dashboard-input"></div>
+                            <div class="field"><label data-clarity-unmask="true">Description</label>
+                                <textarea name="description" rows="2" placeholder="Link description (optional)"
+                                          class="dashboard-input"></textarea></div>
+                        </div>
+                        <p class="quick-reuse-feedback" role="status" aria-live="polite" tabindex="-1" hidden><i class="fas fa-circle-check" aria-hidden="true"></i><span data-clarity-unmask="true"></span></p>
+                        <div>
+                            <span data-clarity-unmask="true" class="field-label">Image <span class="muted">— optional</span></span>
+                            <div id="singleImageControls">
+                                <div class="image-tools">
+                                    <div>
+                                        <input type="file" id="singleImagePicker" name="upload_image" accept="image/*" class="sr-only">
+                                        <label data-clarity-unmask="true" for="singleImagePicker" class="upload-button"><i class="fas fa-image"></i>Choose image</label>
+                                    </div>
+                                    <div class="field"><label data-clarity-unmask="true" class="sr-only" for="singleImageUrl">Or image URL</label>
+                                        <input type="url" id="singleImageUrl" name="image_url" placeholder="Or paste image URL"
+                                               class="dashboard-input"></div>
+                                </div>
+                                <p data-clarity-unmask="true" class="image-help"><i class="fab fa-facebook text-blue-600 mr-1"></i>JPG, PNG, GIF or WEBP up to 2 MB. Uploaded images are fitted without cropping and saved as 1200×630. External URLs stay unchanged.</p>
+                            </div>
+                        </div>
+                        <!-- Single-image preview (app.js reveals this when a file is chosen or an image URL typed) -->
+                        <div id="singleImagePreview" class="hidden block">
+                            <div class="single-preview">
+                                <span data-clarity-unmask="true" class="preview-size">1200 × 630</span>
+                                <img id="singleImagePreviewImg" alt="Selected social preview" decoding="async">
+                            </div>
+                            <div class="preview-footer">
+                                <div>
+                                    <p data-clarity-unmask="true" id="singleImagePreviewLabel" class="preview-label"></p>
+                                    <p id="singleImageFeedback" role="status" aria-live="polite" class="hidden text-xs mt-1 rounded-lg px-3 py-2"></p>
+                                </div>
+                                <div data-clarity-unmask="true" class="preview-actions">
+                                    <button type="button" id="singleImageReplace" class="quiet-button"><i class="fas fa-image mr-1"></i>Replace</button>
+                                    <button type="button" id="singleImageRemove" class="quiet-button danger"><i class="fas fa-trash mr-1"></i>Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button data-clarity-unmask="true" type="submit" id="createSingleBtn"
+                                class="primary-action"><span>Create short link</span></button>
+                    </form>
+                </div>
+
+                <!-- Bulk -->
+                <div id="bulkForm" style="display:none">
+                    <form id="bulkLinkForm" class="creator-form" enctype="multipart/form-data">
+                        <div class="field bulk-domain-block">
+                            <label data-clarity-unmask="true">Select a domain</label>
+                                <div class="domain-picker-wrap">
+    <div class="domain-picker" data-domain-picker>
+        <input type="hidden" name="domain_id" value="2" data-domain-input>
+        <button type="button" class="domain-trigger" data-domain-trigger
+                aria-label="Choose short domain, currently vidx1x.com"
+                aria-haspopup="menu" aria-expanded="false" aria-controls="bulkDomainMenu">
+            <i class="fas fa-globe" aria-hidden="true"></i>
+            <span data-clarity-unmask="true" class="domain-trigger-host" data-domain-selected-host>vidx1x.com</span>
+            <span data-clarity-unmask="true" class="domain-default-badge" data-domain-trigger-default
+                  >Default</span>
+            <i class="fas fa-chevron-down domain-chevron" aria-hidden="true"></i>
+        </button>
+        <div id="bulkDomainMenu" class="domain-menu" data-domain-menu role="menu" hidden>
+                                    <div class="domain-option-row" data-domain-row
+                 data-domain-id="2" data-domain-host="vidx1x.com">
+                <button data-clarity-unmask="true" type="button" class="domain-option" data-domain-select role="menuitemradio"
+                        aria-checked="true">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    <span>vidx1x.com</span>
+                    <i class="fas fa-check domain-selected-check" data-domain-selected-check
+                       aria-hidden="true" ></i>
+                </button>
+                <span data-clarity-unmask="true" class="domain-default-badge" data-domain-menu-default
+                      >Default</span>
+                <button data-clarity-unmask="true" type="button" class="domain-make-default" data-domain-make-default
+                        hidden>Make my default</button>
+            </div>
+                                    <div class="domain-option-row" data-domain-row
+                 data-domain-id="3" data-domain-host="plays9x.com">
+                <button data-clarity-unmask="true" type="button" class="domain-option" data-domain-select role="menuitemradio"
+                        aria-checked="false">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    <span>plays9x.com</span>
+                    <i class="fas fa-check domain-selected-check" data-domain-selected-check
+                       aria-hidden="true" hidden></i>
+                </button>
+                <span data-clarity-unmask="true" class="domain-default-badge" data-domain-menu-default
+                      hidden>Default</span>
+                <button data-clarity-unmask="true" type="button" class="domain-make-default" data-domain-make-default
+                        >Make my default</button>
+            </div>
+                                    <div class="domain-option-row" data-domain-row
+                 data-domain-id="4" data-domain-host="s9xply.com">
+                <button data-clarity-unmask="true" type="button" class="domain-option" data-domain-select role="menuitemradio"
+                        aria-checked="false">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    <span>s9xply.com</span>
+                    <i class="fas fa-check domain-selected-check" data-domain-selected-check
+                       aria-hidden="true" hidden></i>
+                </button>
+                <span data-clarity-unmask="true" class="domain-default-badge" data-domain-menu-default
+                      hidden>Default</span>
+                <button data-clarity-unmask="true" type="button" class="domain-make-default" data-domain-make-default
+                        >Make my default</button>
+            </div>
+                    </div>
+    </div>
+    <div class="domain-preference-row">
+        <label data-clarity-unmask="true" class="domain-remember">
+            <input type="checkbox" data-domain-remember
+                   checked disabled>
+            <span data-domain-remember-label>This is your default domain</span>
+        </label>
+            </div>
+    </div>
+                            </div>
+                        <section data-clarity-unmask="true" class="bulk-mode-guide" aria-labelledby="bulkModeTitle">
+                            <h2 id="bulkModeTitle" class="bulk-mode-title">Bulk links made simple</h2>
+                            <p class="bulk-mode-subtitle">Choose how you want to create links.</p>
+                            <p class="bulk-mode-option"><i class="fas fa-file-lines" aria-hidden="true"></i><span><strong>Different URLs:</strong> Paste one URL on each line.</span></p>
+                            <p class="bulk-mode-option"><i class="fas fa-images" aria-hidden="true"></i><span><strong>Same URL:</strong> Paste it once, then add all images.</span></p>
+                            <label data-clarity-unmask="true" class="bulk-per-image-row" for="bulkPerImage">
+                                <span class="bulk-per-image-toggle">
+                                    <input type="checkbox" id="bulkPerImage" name="one_link_per_image" value="1" role="switch" aria-describedby="bulkPerImageHelp" disabled aria-disabled="true">
+                                    <span class="bulk-per-image-track" aria-hidden="true"></span>
+                                </span>
+                                <span class="bulk-per-image-copy">
+                                    <span class="bulk-per-image-label">Make one short link for each image</span>
+                                    <span id="bulkPerImageHelp" class="bulk-per-image-help" aria-live="polite">Turn this on when every image uses the same URL.</span>
+                                </span>
+                            </label>
+                        </section>
+                        <div class="field">
+                            <label data-clarity-unmask="true" id="bulkUrlsLabel" for="bulkUrls">Destination URLs <span class="muted">— one per line</span></label>
+                            <textarea id="bulkUrls" name="bulk_urls" required rows="5" aria-describedby="bulkPerImageHelp" placeholder="https://example.com/?utm_source=facebook&amp;utm_medium=post&#10;https://example.com/?utm_source=instagram&amp;utm_medium=story"
+                                      class="dashboard-input bulk-urls"></textarea>
+                        </div>
+                        <div class="field-grid">
+                            <div class="field"><label data-clarity-unmask="true">Common title</label>
+                                <input type="text" name="bulk_title" placeholder="Title for all (optional)"
+                                       class="dashboard-input"></div>
+                            <div class="field"><label data-clarity-unmask="true">Common description</label>
+                                <textarea name="bulk_description" rows="2" placeholder="Description for all (optional)"
+                                          class="dashboard-input"></textarea></div>
+                        </div>
+                        <p class="quick-reuse-feedback" role="status" aria-live="polite" tabindex="-1" hidden><i class="fas fa-circle-check" aria-hidden="true"></i><span data-clarity-unmask="true"></span></p>
+                        <div>
+                            <span data-clarity-unmask="true" id="bulkImagesLabel" class="field-label">Images <span class="muted">— rotate across links</span></span>
+                            <div class="bulk-images">
+                                <!-- Thumbnail pool: JS adds a chip + a hidden bulk_image_paths[] input per upload. -->
+                                <div id="bulkImagePool"></div>
+                                <input type="file" id="bulkImagePicker" accept="image/*" multiple class="sr-only">
+                                <label data-clarity-unmask="true" for="bulkImagePicker" class="add-images-tile"><i class="fas fa-plus"></i><span>Add images</span></label>
+                                <button data-clarity-unmask="true" type="button" id="bulkClearImages" class="bulk-clear-images" title="Clear selected images and common image URL; keep your text" disabled>Clear images</button>
+                            </div>
+                            <div id="uploadRecoveryHelp" class="upload-recovery" data-clarity-unmask="true" hidden>
+                                <span>Missing your images?</span>
+                                <button type="button" id="recoverUploads" aria-describedby="uploadRecoveryStatus"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> Find earlier uploads</button>
+                                <span id="uploadRecoveryStatus" class="upload-recovery-note" role="status">From this login only.</span>
+                            </div>
+                            <p data-clarity-unmask="true" class="image-help">Images are uploaded one at a time, normalized to 1200×630.</p>
+                        </div>
+                        <div class="field">
+                            <label data-clarity-unmask="true">Or common image URL <span class="muted">— optional</span></label>
+                            <input type="url" name="bulk_image_url" placeholder="https://example.com/common-image.jpg"
+                                   class="dashboard-input">
+                            <p data-clarity-unmask="true" class="image-help">External image URLs are stored as provided and are not resized.</p>
+                        </div>
+                        <button data-clarity-unmask="true" type="submit" id="createBulkBtn"
+                                class="primary-action"><span>Create bulk short links</span></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- /Tabs panel -->
+
+        <p data-clarity-unmask="true" class="traffic-trust-row" aria-label="Traffic quality protection">
+            <i class="fas fa-shield-alt trust-icon" aria-hidden="true"></i>
+            <span>Bot-safe click totals</span>
+            <span class="trust-separator" aria-hidden="true">&bull;</span>
+            <span>Known fake traffic is stopped before redirect</span>
+        </p>
+
+        <!-- Keep-for-next-batch (applies to single + bulk; read by app.js on a successful create) -->
+        <label data-clarity-unmask="true" class="keep-row">
+            <input type="checkbox" id="keepForNext" checked
+                   >
+            <span>Keep title, description &amp; image(s) for the next batch</span>
+        </label>
+
+        <section id="quickReuse" class="quick-reuse" aria-labelledby="quickReuseTitle" hidden>
+            <header data-clarity-unmask="true" class="quick-reuse-head">
+                <div>
+                    <h2 id="quickReuseTitle" class="quick-reuse-title">Quick Reuse</h2>
+                    <p class="quick-reuse-subtitle">Fill URL, title, description and image</p>
+                </div>
+                <div class="quick-reuse-device">
+                    <i class="fas fa-lock" aria-hidden="true"></i><span>This device only</span>
+                    <button type="button" id="quickReuseClear" class="quick-reuse-clear">Clear</button>
+                </div>
+            </header>
+            <div id="quickReuseList" class="quick-reuse-list"></div>
+        </section>
+
+        <!-- Success tray (populated by app.js after a create; hidden until then) -->
+        <div id="resultTray" class="hidden"></div>
+
+        </section><!-- /LEFT column -->
+
+        <!-- RIGHT column: links list -->
+        <section class="links-panel">
+
+        
+        <!-- Links list -->
+        <div>
+            <div class="links-heading-row">
+                <h2 data-clarity-unmask="true" class="links-heading">All short links
+                    <span class="link-count" id="linkCount">(125,103 total)</span>
+                </h2>
+            </div>
+
+            <!-- Search + per-page (server-side; GET so it's bookmarkable) -->
+            <form method="GET" action="index.php" class="link-search">
+                <div class="search-field">
+                    <input type="text" name="q" value="" placeholder="Search links"
+                           class="dashboard-input">
+                    <button type="submit" class="search-submit" aria-label="Search links"><i class="fas fa-magnifying-glass"></i></button>
+                </div>
+                <select name="per" class="dashboard-input" aria-label="Links per page">
+                                            <option value="20" selected>20 / page</option>
+                                            <option value="50" >50 / page</option>
+                                            <option value="100" >100 / page</option>
+                                    </select>
+                            </form>
+
+            
+            <div id="linksListContainer" class="links-list">
+                                    <div class="link-row" id="link-card-2-1jfWTm">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/ab270d45c6d9d82e.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/ab270d45c6d9d82e.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Untitled link">Untitled link</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/1jfWTm" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/1jfWTm</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/1jfWTm', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://np.lockgaed.com/links.html?utm_source=Dara&amp;utm_medium=111"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://np.lockgaed.com/links.html?utm_source=Dara&amp;utm_medium=111</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+            </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="48 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">48</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/1jfWTm" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="1jfWTm" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-RUksaT">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/c7d6adda01dda8c1.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/c7d6adda01dda8c1.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Untitled link">Untitled link</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/RUksaT" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/RUksaT</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/RUksaT', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://np.lockgaed.com/links.html?utm_source=Dara&amp;utm_medium=111"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://np.lockgaed.com/links.html?utm_source=Dara&amp;utm_medium=111</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+            </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="19 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">19</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/RUksaT" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="RUksaT" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-AhHP7K">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/2d0628b657e0146e.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/2d0628b657e0146e.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Untitled link">Untitled link</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/AhHP7K" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/AhHP7K</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/AhHP7K', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://np.lockgaed.com/links.html?utm_source=Dara&amp;utm_medium=111"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://np.lockgaed.com/links.html?utm_source=Dara&amp;utm_medium=111</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+            </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="9 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">9</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/AhHP7K" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="AhHP7K" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-4-ziaVua">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://s9xply.com/uploads/dcd1a2aba653907d.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://s9xply.com/uploads/dcd1a2aba653907d.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="xxxx">xxxx</p>
+        <div class="link-short-line">
+            <a href="https://s9xply.com/ziaVua" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://s9xply.com/ziaVua</a>
+            <button type="button" onclick="copySingleLink('https://s9xply.com/ziaVua', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://bahi23.jobd0.com/?utm_source=Malik&amp;utm_medium=Mafia"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://bahi23.jobd0.com/?utm_source=Malik&amp;utm_medium=Mafia</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="xxxxx">xxxxx</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="39 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">39</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://s9xply.com/ziaVua" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="ziaVua" data-feedback-domain-id="4"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-4-zJo0mI">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://s9xply.com/uploads/369644bfda1ae572.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://s9xply.com/uploads/369644bfda1ae572.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="xxxx">xxxx</p>
+        <div class="link-short-line">
+            <a href="https://s9xply.com/zJo0mI" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://s9xply.com/zJo0mI</a>
+            <button type="button" onclick="copySingleLink('https://s9xply.com/zJo0mI', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://bahi23.jobd0.com/?utm_source=Malik&amp;utm_medium=Mafia"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://bahi23.jobd0.com/?utm_source=Malik&amp;utm_medium=Mafia</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="xxxxx">xxxxx</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="18 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">18</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://s9xply.com/zJo0mI" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="zJo0mI" data-feedback-domain-id="4"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-4-208MFj">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://s9xply.com/uploads/96e9ac789d265cbb.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://s9xply.com/uploads/96e9ac789d265cbb.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="xxxx">xxxx</p>
+        <div class="link-short-line">
+            <a href="https://s9xply.com/208MFj" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://s9xply.com/208MFj</a>
+            <button type="button" onclick="copySingleLink('https://s9xply.com/208MFj', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://bahi23.jobd0.com/?utm_source=Malik&amp;utm_medium=Mafia"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://bahi23.jobd0.com/?utm_source=Malik&amp;utm_medium=Mafia</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="xxxxx">xxxxx</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="10 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">10</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://s9xply.com/208MFj" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="208MFj" data-feedback-domain-id="4"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-4-OC8k9I">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://s9xply.com/uploads/f055d5889c897081.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://s9xply.com/uploads/f055d5889c897081.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="xxxx">xxxx</p>
+        <div class="link-short-line">
+            <a href="https://s9xply.com/OC8k9I" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://s9xply.com/OC8k9I</a>
+            <button type="button" onclick="copySingleLink('https://s9xply.com/OC8k9I', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://bahi23.jobd0.com/?utm_source=Malik&amp;utm_medium=Mafia"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://bahi23.jobd0.com/?utm_source=Malik&amp;utm_medium=Mafia</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="xxxxx">xxxxx</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="27 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">27</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://s9xply.com/OC8k9I" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="OC8k9I" data-feedback-domain-id="4"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-Cte7N4">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/64214154d967aba9.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/64214154d967aba9.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/Cte7N4" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/Cte7N4</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/Cte7N4', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://np.lockgaed.com/links.html?utm_source=MN&amp;utm_medium=TOP"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://np.lockgaed.com/links.html?utm_source=MN&amp;utm_medium=TOP</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Full sixe">Full sixe</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="0 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">0</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/Cte7N4" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="Cte7N4" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-GUJQIS">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/64214154d967aba9.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/64214154d967aba9.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/GUJQIS" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/GUJQIS</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/GUJQIS', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://np.lockgaed.com/links.html?utm_source=MN&amp;utm_medium=TOP"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://np.lockgaed.com/links.html?utm_source=MN&amp;utm_medium=TOP</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Full sixe">Full sixe</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="0 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">0</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/GUJQIS" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="GUJQIS" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-z9O5FF">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/5efe76dc56761dab.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/5efe76dc56761dab.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/z9O5FF" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/z9O5FF</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/z9O5FF', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="2 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">2</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/z9O5FF" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="z9O5FF" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-egHOkQ">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/600117b04a1cf2f0.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/600117b04a1cf2f0.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/egHOkQ" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/egHOkQ</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/egHOkQ', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="8 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">8</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/egHOkQ" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="egHOkQ" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-FPtcO8">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/7091185ec80018af.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/7091185ec80018af.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/FPtcO8" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/FPtcO8</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/FPtcO8', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="5 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">5</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/FPtcO8" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="FPtcO8" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-c6eVgL">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/a260fee2095a13bd.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/a260fee2095a13bd.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/c6eVgL" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/c6eVgL</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/c6eVgL', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="5 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">5</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/c6eVgL" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="c6eVgL" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-s6mPZp">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/28a229a06c585dc1.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/28a229a06c585dc1.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/s6mPZp" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/s6mPZp</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/s6mPZp', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="3 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">3</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/s6mPZp" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="s6mPZp" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-TcEUyj">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/4765f574829b2903.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/4765f574829b2903.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/TcEUyj" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/TcEUyj</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/TcEUyj', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="5 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">5</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/TcEUyj" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="TcEUyj" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-hPaiXY">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/ca8627e60831fe88.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/ca8627e60831fe88.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/hPaiXY" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/hPaiXY</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/hPaiXY', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="5 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">5</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/hPaiXY" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="hPaiXY" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-dfzl63">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/de8f802ed02f7ba9.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/de8f802ed02f7ba9.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/dfzl63" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/dfzl63</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/dfzl63', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="13 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">13</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/dfzl63" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="dfzl63" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-QSOmUJ">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/3f8fa1ef7087b65d.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/3f8fa1ef7087b65d.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/QSOmUJ" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/QSOmUJ</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/QSOmUJ', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="3 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">3</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/QSOmUJ" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="QSOmUJ" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-ebFraw">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/4257ec7ade5044c8.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/4257ec7ade5044c8.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/ebFraw" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/ebFraw</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/ebFraw', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="10 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">10</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/ebFraw" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="ebFraw" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                                    <div class="link-row" id="link-card-2-9JYcG7">
+    <span class="link-status" aria-label="Active link"></span>
+
+    <div class="link-thumb">
+                    <img data-clarity-unmask="true" hidden data-dashboard-src="https://vidx1x.com/uploads/f634dd9a3f58876d.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-image'}))">
+            <noscript><img data-clarity-unmask="true" src="https://vidx1x.com/uploads/f634dd9a3f58876d.jpg" alt="" loading="lazy" decoding="async" width="58" height="44"></noscript>
+            </div>
+
+    <div class="link-main">
+        <p data-clarity-unmask="true" class="link-title" title="Full sixe">Full sixe</p>
+        <div class="link-short-line">
+            <a href="https://vidx1x.com/9JYcG7" target="_blank" rel="noopener noreferrer" class="link-short" data-clarity-unmask="true">https://vidx1x.com/9JYcG7</a>
+            <button type="button" onclick="copySingleLink('https://vidx1x.com/9JYcG7', this)" title="Copy short link" aria-label="Copy short link" class="link-copy"><i class="fas fa-copy"></i></button>
+        </div>
+        <p class="link-meta" data-clarity-unmask="true" title="https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b"><i class="fas fa-arrow-up-right-from-square mr-1"></i><span style="display:inline-block;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">https://auctionr.org/4/fb8a4dcde3031fe4c6ed51372cd9845b</span> <span aria-hidden="true">·</span> Nov 08, 2026</p>
+        <p data-clarity-unmask="true" class="link-description" title="Video">Video</p>    </div>
+
+    <span class="link-clicks" data-clarity-unmask="true" title="Counted clicks" aria-label="2 counted clicks">
+        <i class="fas fa-chart-simple text-indigo-600" aria-hidden="true"></i>
+        <span class="link-clicks-value">2</span>
+        <span class="link-clicks-unit">clicks</span>
+    </span>
+
+    <div class="link-actions" data-feedback-actions-wrapper hidden>
+        <button type="button" data-kebab-toggle aria-haspopup="true" aria-expanded="false"
+                aria-label="More actions for https://vidx1x.com/9JYcG7" class="kebab-toggle"><i class="fas fa-ellipsis-vertical"></i></button>
+        <div data-kebab-menu class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <button type="button" hidden data-feedback-link-code="9JYcG7" data-feedback-domain-id="2"
+                    class="feedback-link-report flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                <i class="fas fa-flag w-4 text-center"></i><span data-clarity-unmask="true">Report this link</span></button>
+                    </div>
+    </div>
+</div>
+                            </div>
+
+            <!-- Mobile: reveal the rest of THIS page's already-loaded rows (managed by app.js) -->
+            <button data-clarity-unmask="true" type="button" id="showMoreLinks"
+                    class="hidden w-full mt-3 text-sm font-semibold text-purple-600 hover:text-purple-800 py-2"></button>
+
+            <!-- Pagination -->
+                        <div class="pagination-wrap flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span data-clarity-unmask="true" class="text-sm text-gray-500">
+                    Page 1 of 6256 &middot; 125103 links                </span>
+                <div class="flex items-center gap-1 flex-wrap justify-center">
+                    <span class="inline-flex items-center justify-center min-w-[2.25rem] h-9 px-3 rounded-lg text-sm font-medium transition bg-gray-50 text-gray-300 cursor-not-allowed"><i class="fas fa-chevron-left text-xs"></i></span><span class="inline-flex items-center justify-center min-w-[2.25rem] h-9 px-3 rounded-lg text-sm font-medium transition tab-active">1</span><a href="index.php?page=2&amp;per=20" class="inline-flex items-center justify-center min-w-[2.25rem] h-9 px-3 rounded-lg text-sm font-medium transition bg-gray-100 text-gray-600 hover:bg-gray-200">2</a><a href="index.php?page=3&amp;per=20" class="inline-flex items-center justify-center min-w-[2.25rem] h-9 px-3 rounded-lg text-sm font-medium transition bg-gray-100 text-gray-600 hover:bg-gray-200">3</a><span class="px-1 text-gray-400">…</span><a href="index.php?page=6256&amp;per=20" class="inline-flex items-center justify-center min-w-[2.25rem] h-9 px-3 rounded-lg text-sm font-medium transition bg-gray-100 text-gray-600 hover:bg-gray-200">6256</a><a href="index.php?page=2&amp;per=20" class="inline-flex items-center justify-center min-w-[2.25rem] h-9 px-3 rounded-lg text-sm font-medium transition bg-gray-100 text-gray-600 hover:bg-gray-200"><i class="fas fa-chevron-right text-xs"></i></a>                </div>
+            </div>
+                    </div>
+        <!-- /Links list panel -->
+
+        </section><!-- /RIGHT column -->
+        </main><!-- /two-column grid -->
+
+    </div>
+
+    <aside data-clarity-unmask="true" id="feedbackPrompt" class="feedback-prompt" hidden aria-labelledby="feedbackPromptTitle" tabindex="-1">
+        <button type="button" class="feedback-prompt-close" data-feedback-action="close" aria-label="Close feedback"><i class="fas fa-xmark"></i></button>
+        <h2 id="feedbackPromptTitle" class="feedback-prompt-title">Aaj ka experience kaisa tha?</h2>
+        <p class="feedback-prompt-subtitle">Bas ek tap</p>
+        <div class="feedback-prompt-actions">
+            <button type="button" class="feedback-tap good" data-feedback-action="good"><i class="far fa-face-smile"></i>Theek tha</button>
+            <button type="button" class="feedback-tap problem" data-feedback-action="problem"><i class="far fa-face-frown"></i>Problem hai</button>
+            <button type="button" class="feedback-tap" data-feedback-action="later"><i class="far fa-clock"></i>Baad mein</button>
+        </div>
+        <button type="button" class="feedback-more" data-feedback-action="open_general">Feedback dena hai?</button>
+    </aside>
+
+    <div id="feedbackModal" class="feedback-modal" hidden>
+        <button type="button" class="feedback-backdrop" data-feedback-action="not_now" aria-label="Close feedback form"></button>
+        <section class="feedback-sheet" role="dialog" aria-modal="true" aria-labelledby="feedbackSheetTitle" aria-describedby="feedbackSheetSubtitle" tabindex="-1">
+            <div class="feedback-sheet-handle" aria-hidden="true"></div>
+            <h2 data-clarity-unmask="true" id="feedbackSheetTitle" class="feedback-sheet-title">Help us improve</h2>
+            <p data-clarity-unmask="true" id="feedbackSheetSubtitle" class="feedback-sheet-subtitle">Bas 10 seconds lagenge</p>
+            <p data-clarity-unmask="true" id="feedbackLinkContext" class="feedback-link-context" hidden>Reporting this short link</p>
+            <div data-clarity-unmask="true" class="feedback-categories" role="group" aria-label="Choose one issue">
+                <button type="button" class="feedback-category" data-feedback-category="reach_low"><span>Facebook reach kam hai</span><i class="fas fa-chevron-right"></i></button>
+                <div id="feedbackReachReasons" class="feedback-reach-reasons" hidden role="group" aria-labelledby="feedbackReachQuestion">
+                    <p id="feedbackReachQuestion" class="feedback-reach-question">Aapko kya lag raha hai?</p>
+                    <div class="feedback-reach-options">
+                        <button type="button" class="feedback-reach-option" data-feedback-reach-reason="facebook_update_suspected" aria-pressed="false">Facebook update lag raha hai</button>
+                        <button type="button" class="feedback-reach-option" data-feedback-reach-reason="other" aria-pressed="false">Koi aur reason</button>
+                        <button type="button" class="feedback-reach-option" data-feedback-reach-reason="unknown" aria-pressed="false">Pata nahi</button>
+                    </div>
+                </div>
+                <button type="button" class="feedback-category" data-feedback-category="clicks_wrong"><span>Click number galat lag raha hai</span><i class="fas fa-chevron-right"></i></button>
+                <button type="button" class="feedback-category" data-feedback-category="slow_or_error"><span>Link slow hai ya error aa raha hai</span><i class="fas fa-chevron-right"></i></button>
+                <button type="button" class="feedback-category" data-feedback-category="feature"><span>Koi feature chahiye</span><i class="fas fa-chevron-right"></i></button>
+                <button type="button" class="feedback-category" data-feedback-category="other"><span>Kuch aur batana hai</span><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <textarea id="feedbackMessage" class="feedback-message" maxlength="500" aria-label="Optional feedback details" placeholder="Aur kuch batana hai? (optional)"></textarea>
+            <button data-clarity-unmask="true" type="button" id="feedbackSend" class="feedback-send" disabled>Send feedback</button>
+            <button data-clarity-unmask="true" type="button" class="feedback-not-now" data-feedback-action="not_now">Not now</button>
+            <p data-clarity-unmask="true" class="feedback-privacy">Password ya personal info mat likhein.</p>
+        </section>
+    </div>
+
+    <!-- ?v=mtime busts browser/Varnish cache whenever app.js changes, so a stale
+         cached copy can never silently break newer features (e.g. bulk image pool). -->
+    <script src="assets/app.js?v=1792086074"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"744c620897c1463b99b2ba82dd50594b","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
